@@ -2,7 +2,7 @@ const Discord = require('discord.js');
 //requesting discord.js that will be named discord
 const fetch = require('node-fetch');
 const client = new Discord.Client();
-//this will be the"bot
+//this is the"bot
 const auth = require('./auth.json');
 //getting auth.json from directory which will be named
 const signature = auth.signature;
@@ -12,10 +12,6 @@ const iextoken = auth.iextoken;
 client.on("ready", () => {
   console.log("i hate you");
 });
-//when 'ready' =>(when its ready) do this
-//"message", when recievs a message
-//"dissconnect", when dissconnects
-//logging something into console
 
 client.on("message", (msg) => {
   if(msg.content.substring(0, signature.length) == signature){
@@ -41,6 +37,7 @@ async function articles(msg,stock){
   msg.reply("Sorry, invalid ticker symbol!");
 };
   var priorities = {"MarketWatch":[],"InvestorPlace":[], "Business Insider":[]};
+//used object just incase we need to store somthing to help prioritize stuff, can use list if wanted
   var embed = new Discord.MessageEmbed();
   embed.setTitle("Articles for "+name);
   embed.setColor(0x34b7eb);
@@ -49,6 +46,7 @@ async function articles(msg,stock){
 };
 
 function filter(embed,real_links,priorities,time){
+//focuses on filtering and finding more relative articles from more reliable sources
   var count = 0;
   for (i = real_links.length-1; i > 0; i-= 1) {
     if (Object.keys(priorities).includes(real_links[i].source) && real_links[i].lang == "en" && count < 3){
