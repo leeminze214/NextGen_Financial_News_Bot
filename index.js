@@ -42,11 +42,12 @@ async function articles(msg,stock){
   var embed = new Discord.MessageEmbed();
   embed.setTitle("Articles for "+name);
   embed.setColor(0x34b7eb);
-  filter(embed,real_links,priorities,time);
-  msg.reply(embed);
+  if (filter(msg,embed,real_links,priorities,time,name)){
+    msg.reply(embed);
+  };
 };
 
-function filter(embed,real_links,priorities,time){
+function filter(msg,embed,real_links,priorities,time,name){
 //focuses on filtering and finding more relative articles from more reliable sources
   var count = 0;
   for (i = real_links.length-1; i > 0; i-= 1) {
@@ -64,9 +65,15 @@ function filter(embed,real_links,priorities,time){
     });
     embed.setThumbnail(real_links[i].image);
     count++;
-    }
   };
-  embed.setFooter(time);
+  };
+  if (count != 0){
+    embed.setFooter(time);
+    return true;
+  }
+  else{
+    msg.reply("Sorry, articles were not found on "+name);
+  };
 };
-console.log(auth.discordToken);
+
 client.login(auth.discordToken);
