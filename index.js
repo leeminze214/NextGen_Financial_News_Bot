@@ -68,5 +68,5 @@ function filter(embed,real_links,priorities,time){
   };
   embed.setFooter(time);
 };
-console.log(123)
+console.log(auth.discordToken);
 client.login(auth.discordToken);
