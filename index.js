@@ -4,6 +4,7 @@ const fetch = require('node-fetch');
 const client = new Discord.Client();
 //this is the"bot
 const auth = require('./auth.json');
+
 //getting auth.json from directory which will be named
 const signature = auth.signature;
 //getting sig and iex token from auth.json
@@ -67,4 +68,5 @@ function filter(embed,real_links,priorities,time){
   };
   embed.setFooter(time);
 };
+console.log(123)
 client.login(auth.discordToken);
