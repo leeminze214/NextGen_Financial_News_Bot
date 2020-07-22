@@ -19,7 +19,9 @@ client.on("message", async (msg) => {
     const refined = msg.content.substring(signature.length);
 
     if (refined.startsWith("articles")){
-      let stock = msg.content.substring(signature.length+"articles".length).trim();
+      let stoc = msg.content.substring(signature.length+"articles".length).trim()
+      let stock = stoc.toUpperCase();
+      console.log(stock);
       if (stock != ""){
         articles(stock,msg);
         };
@@ -31,13 +33,19 @@ async function articles(stock, msg){
   let fetch_time;
   let start_time = new Date().getTime();
   let links = await get_articles(stock);
+  console.log(links);
+  var scoring = {"lang":{"en":200},"source": {"InvestorPlace":3,"MarketWatch":3,"Business Insider":2, "Yahoo Finance":3},
+  "hasPaywall": {"false": 100}};
   fetch_time = 'This result was fetched in '+ (new Date().getTime() - start_time) +"ms";
   if (links == "not found") {
     msg.reply("Invalid input! Please enter a valid ticker symbol.");
+  }else if (links.length == 0) {
+    msg.reply("Sorry, no articles found on "+stock);
+  }else if (links == "crypto") {
+    msg.reply("Sorry, we do not offer crypto articles!");
   }else{
-    var scored = score_articles(links);
-    var TO_return = await sort_top_articles(scored);
-    console.log(TO_return);
+    var scored = score_articles(links,scoring);
+    var TO_return = await sort_top_articles(scored,scoring);
     await embeded(TO_return,fetch_time,stock,msg);
   };
   console.log("articles is working just fine yayy");
@@ -45,9 +53,11 @@ async function articles(stock, msg){
 
 
 //function that will fetch all the articles
-async function get_articles(symbol){
+async function get_articles(stock){
+  console.log(stock);
+  var no_crypto = ["ETH", "BCH","LTC","NEO"];
   let to_return;
-  await fetch('https://cloud.iexapis.com/stable/stock/'+symbol+'/news/last/6?token='+iextoken)
+  await fetch('https://cloud.iexapis.com/stable/stock/'+stock+'/news/last/6?token='+iextoken)
   .then(res => res.json())
   .then(json => {
     to_return = json;
@@ -55,14 +65,16 @@ async function get_articles(symbol){
     to_return = "not found";
   });
   console.log("Get_artilces is wroking");
+  if (no_crypto.includes(stock)) {
+    to_return = "crypto";
+  }
   return to_return;
 };
 
-// adds a score to each json article response
-function score_articles(json){
+
+// adds a score based on scoring to each json article response
+function score_articles(json,scoring){
   let all = [];
-  let scoring = {"lang":{"en":69},"source": {"InvestorPlace":3,"MarketWatch":3,"Business Insider":2, "Yahoo Finance":3},
-    "hasPaywall": {"false": 100}};
   let factors = Object.keys(scoring);
   for (var i = 0; i < json.length; i++) {
     var score = 0;
@@ -89,35 +101,44 @@ function score_articles(json){
 };
 
 //sorts articles based on their "score" property and returns top 3
-function sort_top_articles(scored){
+function sort_top_articles(scored,scoring){
   let all_scored = [];
-  let article;
+  const len = scored.length;
   let index;
-  console.log(scored);
-  while (all_scored.length != scored.length) {
+  let article;
+  let to_return = [];
+  while (all_scored.length != len) {
+
     let best = 0;
     for (var i = 0; i < scored.length; i++) {
-      console.log(scored[i]["score"], best);
       if (scored[i]["score"] >= best) {
         best = scored[i]["score"];
         article = scored[i];
         index = i;
-        console.log("heye");
       };
     };
     scored.splice(index,1);
     all_scored.push(article);
   };
-  console.log("sort is wroking")
-  return all_scored;
+  //getting rid non-eng, despite its score
+  for (var i = 0; i < all_scored.length; i++) {
+    if (all_scored[i].lang == "en") {
+      to_return.push(all_scored[i]);
+    };
+  };
+  console.log("sort is wroking");
+  if (to_return.length <= 3){
+    return to_return.slice(0,to_return.length);
+  }else{
+    return to_return.slice(0,3);
+  };
 };
 
 //reply with formulated embed
 async function embeded(top_3_articles,fetch_time,stock,msg){
-  console.log(top_3_articles);
-  var stock_upper = stock.toUpperCase();
+
   let embed = new Discord.MessageEmbed();
-  embed.setTitle("Articles for "+stock_upper);
+  embed.setTitle("Articles for "+stock);
   embed.setColor(0x34b7eb);
   for (var i = 0; i < top_3_articles.length; i++) {
     embed.addFields({
@@ -125,7 +146,7 @@ async function embeded(top_3_articles,fetch_time,stock,msg){
     value:"[ Press here ](" + top_3_articles[i]["url"] + ")"
     });
   };
-  embed.setThumbnail('https://storage.googleapis.com/iex/api/logos/'+stock_upper+'.png');
+  embed.setThumbnail('https://storage.googleapis.com/iex/api/logos/'+stock+'.png');
   embed.setFooter(fetch_time);
   console.log("embeded is wroking");
   msg.reply(embed);
