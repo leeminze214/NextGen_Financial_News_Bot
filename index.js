@@ -39,10 +39,8 @@ async function articles(stock, msg){
   fetch_time = 'This result was fetched in '+ (new Date().getTime() - start_time) +"ms";
   if (links == "not found") {
     msg.reply("Invalid input! Please enter a valid ticker symbol.");
-  }else if (links.length == 0) {
+  }else if (links.length == 0 || links == "crypto") {
     msg.reply("Sorry, no articles found on "+stock);
-  }else if (links == "crypto") {
-    msg.reply("Sorry, we do not offer crypto articles!");
   }else{
     var scored = score_articles(links,scoring);
     var TO_return = await sort_top_articles(scored,scoring);
